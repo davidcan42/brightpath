@@ -14,6 +14,97 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enum for difficulty preferences
+enum DifficultyPreference {
+  Simplified
+  Standard
+  Advanced
+}
+
+// Enum for learning progress status
+enum ProgressStatus {
+  started
+  ido_complete
+  wedo_complete
+  youdo_complete
+}
+
+// Enum for content types
+enum ContentType {
+  video
+  text
+}
+
+// Users table - PostgreSQL relational data
+model User {
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  age                  Int
+  clerkId              String?               @unique // For Clerk integration
+  difficultyPreference DifficultyPreference  @default(Standard)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  
+  // Relations
+  progress             UserProgress[]
+  creations            UserCreation[]
+  
+  @@map("users")
+}
+
+// User progress tracking - PostgreSQL relational data
+model UserProgress {
+  id        String         @id @default(cuid())
+  userId    String
+  moduleId  String         // References ContentModule.id
+  status    ProgressStatus @default(started)
+  score     Int            @default(0)
+  updatedAt DateTime       @updatedAt
+  
+  // Relations
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module    ContentModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, moduleId])
+  @@map("user_progress")
+}
+
+// Content modules - Using PostgreSQL with JSONB for flexible content
+model ContentModule {
+  id           String    @id @default(cuid())
+  sourceExpert String
+  topicTitle   String
+  category     String
+  content      Json      // JSONB field for flexible content structure
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  // Relations
+  progress     UserProgress[]
+  creations    UserCreation[]
+  
+  @@map("content_modules")
+}
+
+// User creations - Using PostgreSQL with JSONB for flexible content
+model UserCreation {
+  id           String      @id @default(cuid())
+  userId       String
+  moduleId     String
+  contentType  ContentType
+  contentUrl   String
+  peerReviews  Json        @default("[]") // JSONB array for peer reviews
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Relations
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module       ContentModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  @@map("user_creations")
+}
+
+// Legacy model from starter template - can be removed later
 model Post {
   id        Int      @id @default(autoincrement())
   title     String

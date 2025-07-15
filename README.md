@@ -40,8 +40,8 @@ npm --version
 First, clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/switch-dimension/switchdimension-webapp-starter.git
-cd switchdimension-webapp-starter
+git clone https://github.com/switch-dimension/brightpath.git
+cd brightpath
 ```
 
 ### 2. Clerk Setup

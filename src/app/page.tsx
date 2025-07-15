@@ -1,28 +1,27 @@
 import { auth } from "@clerk/nextjs/server";
-import PostManager from "@/components/PostManager";
+import { redirect } from "next/navigation";
+import { KnowledgeStream } from "@/components/KnowledgeStream";
+import { prisma } from "@/lib/prisma";
 
-export default async function Dashboard() {
+export default async function HomePage() {
   const { userId } = await auth();
 
   if (!userId) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
-          <p className="text-muted-foreground">You need to be signed in to view this page.</p>
-        </div>
-      </div>
-    );
+    redirect("/sign-in");
+  }
+
+  // Check if user exists in database (onboarding completed)
+  const user = await prisma.user.findUnique({
+    where: { clerkId: userId },
+  });
+
+  if (!user) {
+    redirect("/onboarding");
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Entry point for your app</p>
-      </div>
-      
-      <PostManager />
+    <div className="min-h-screen bg-background">
+      <KnowledgeStream user={user} />
     </div>
   );
 }
